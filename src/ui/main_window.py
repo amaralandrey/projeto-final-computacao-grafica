@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
+from ui.canvas import Canvas
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -11,3 +12,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         self.main_layout = QHBoxLayout(central_widget)
+     
+        self.canvas = Canvas()
+        self.main_layout.addWidget(self.canvas)
