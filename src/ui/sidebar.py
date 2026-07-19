@@ -9,34 +9,31 @@ class Sidebar(QWidget):
         self.setFixedWidth(320)
         self.layout = QVBoxLayout(self)
 
-        # --- Abas (Organização por categorias) ---
         self.tabs = QTabWidget()
         
         self.tab_primitivas = QWidget()
         self.tab_preenchimento = QWidget()
         self.tab_transformacoes = QWidget()
         self.tab_recorte = QWidget() 
-        self.tab_projecoes = QWidget() # Nova Aba de Projeções
+        self.tab_projecoes = QWidget() 
         
         self.tabs.addTab(self.tab_primitivas, "Formas")
         self.tabs.addTab(self.tab_preenchimento, "Pintura")
         self.tabs.addTab(self.tab_transformacoes, "Transf.")
         self.tabs.addTab(self.tab_recorte, "Recorte") 
-        self.tabs.addTab(self.tab_projecoes, "Proj. 3D") # Adicionado ao QTabWidget
+        self.tabs.addTab(self.tab_projecoes, "Proj. 3D") 
         
         self.setup_tab_primitivas()
         self.setup_tab_preenchimento()
         self.setup_tab_transformacoes()
         self.setup_tab_recorte() 
-        self.setup_tab_projecoes() # Chamada do Setup da nova aba
+        self.setup_tab_projecoes() 
         
         self.layout.addWidget(self.tabs)
 
-        # --- Grupo de Parâmetros (Dinâmico) ---
         self.group_coords = QGroupBox("Parâmetros do Algoritmo")
         self.coords_layout = QFormLayout()
         
-        # Criação das entradas
         self.spin_x1, self.spin_y1 = self.create_spinbox(), self.create_spinbox()
         self.spin_x2, self.spin_y2 = self.create_spinbox(), self.create_spinbox()
         self.spin_x3, self.spin_y3 = self.create_spinbox(), self.create_spinbox()
@@ -45,14 +42,12 @@ class Sidebar(QWidget):
         self.input_polyline = QLineEdit()
         self.input_polyline.setPlaceholderText("Ex: -5,5; 0,0; 5,5")
         
-        # Labels para renomear dinamicamente
         self.lbl_x1, self.lbl_y1 = QLabel("X1:"), QLabel("Y1:")
         self.lbl_x2, self.lbl_y2 = QLabel("X2:"), QLabel("Y2:")
         self.lbl_x3, self.lbl_y3 = QLabel("X3:"), QLabel("Y3:")
         self.lbl_x4, self.lbl_y4 = QLabel("X4:"), QLabel("Y4:")
         self.lbl_r, self.lbl_poly = QLabel("Raio:"), QLabel("Dados:")
         
-        # Adicionar ao layout
         self.coords_layout.addRow(self.lbl_x1, self.spin_x1)
         self.coords_layout.addRow(self.lbl_y1, self.spin_y1)
         self.coords_layout.addRow(self.lbl_x2, self.spin_x2)
@@ -67,24 +62,21 @@ class Sidebar(QWidget):
         self.group_coords.setLayout(self.coords_layout)
         self.layout.addWidget(self.group_coords)
 
-        # --- Ações ---
         self.btn_draw = QPushButton("Desenhar / Aplicar")
         self.btn_clear = QPushButton("Limpar Tela")
         self.layout.addWidget(self.btn_draw)
         self.layout.addWidget(self.btn_clear)
         self.layout.addStretch()
 
-        # Conexões
         self.combo_prim.currentIndexChanged.connect(self.update_fields)
         self.combo_preench.currentIndexChanged.connect(self.update_fields)
         self.combo_transf.currentIndexChanged.connect(self.update_fields)
         self.combo_recorte.currentIndexChanged.connect(self.update_fields) 
-        self.combo_proj.currentIndexChanged.connect(self.update_fields) # Nova conexão
+        self.combo_proj.currentIndexChanged.connect(self.update_fields) 
         self.tabs.currentChanged.connect(self.update_fields)
         
         self.update_fields()
 
-    # --- Configuração das Abas ---
     def setup_tab_primitivas(self):
         layout = QVBoxLayout(self.tab_primitivas)
         self.combo_prim = QComboBox()
@@ -118,7 +110,7 @@ class Sidebar(QWidget):
         self.combo_recorte.addItem("Recorte de Polígono", "clip_poly")
         layout.addWidget(self.combo_recorte)
 
-    def setup_tab_projecoes(self): # Método para as opções de projeção 3D
+    def setup_tab_projecoes(self): 
         layout = QVBoxLayout(self.tab_projecoes)
         self.combo_proj = QComboBox()
         self.combo_proj.addItem("Ortográfica", "proj_ortho")
@@ -126,10 +118,9 @@ class Sidebar(QWidget):
         self.combo_proj.addItem("Perspectiva", "proj_persp")
         layout.addWidget(self.combo_proj)
 
-    # --- Lógica de Interface ---
     def create_spinbox(self):
         spin = QSpinBox()
-        spin.setRange(-1000, 1000)
+        spin.setRange(-11, 11)
         return spin
 
     def get_selected_algorithm(self):
@@ -138,7 +129,7 @@ class Sidebar(QWidget):
         if tab_idx == 1: return self.combo_preench.currentData()
         if tab_idx == 2: return self.combo_transf.currentData()
         if tab_idx == 3: return self.combo_recorte.currentData() 
-        if tab_idx == 4: return self.combo_proj.currentData() # Retorna o dado da nova aba
+        if tab_idx == 4: return self.combo_proj.currentData() 
 
     def set_row(self, label, field, visible, text=""):
         label.setVisible(visible)
@@ -146,7 +137,6 @@ class Sidebar(QWidget):
         if visible: label.setText(text)
 
     def update_fields(self):
-        # Esconde tudo
         campos = [
             (self.lbl_x1, self.spin_x1), (self.lbl_y1, self.spin_y1),
             (self.lbl_x2, self.spin_x2), (self.lbl_y2, self.spin_y2),
@@ -158,10 +148,8 @@ class Sidebar(QWidget):
 
         algo = self.get_selected_algorithm()
 
-        # Altera o placeholder apenas como auxílio visual para o usuário
         self.input_polyline.setPlaceholderText("Ex: -5,5; 0,0; 5,5")
 
-        # Configura visibilidade baseada no algoritmo
         if algo == "bresenham":
             self.set_row(self.lbl_x1, self.spin_x1, True, "X Inicial:")
             self.set_row(self.lbl_y1, self.spin_y1, True, "Y Inicial:")
@@ -229,7 +217,6 @@ class Sidebar(QWidget):
             self.set_row(self.lbl_x4, self.spin_x4, True, "Janela X Máx:")
             self.set_row(self.lbl_y4, self.spin_y4, True, "Janela Y Máx:")
         
-        # --- Lógica de exibição para as Projeções 3D ---
         elif algo == "proj_ortho":
             self.input_polyline.setPlaceholderText("Ex: -5,5,2; 0,0,3; 5,5,1")
             self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices 3D:")

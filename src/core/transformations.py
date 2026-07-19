@@ -13,12 +13,9 @@ class Transformations:
         
         rotated = []
         for x, y in points:
-            # Transladar para a origem do pivô
             tx, ty = x - px, y - py
-            # Rotacionar
             rx = tx * cos_val - ty * sin_val
             ry = tx * sin_val + ty * cos_val
-            # Transladar de volta
             rotated.append((int(round(rx + px)), int(round(ry + py))))
         return rotated
 
@@ -26,7 +23,6 @@ class Transformations:
     def scale(points, sx, sy, fx, fy):
         scaled = []
         for x, y in points:
-            # Escalar em relação ao ponto fixo (fx, fy)
             sx_val = fx + (x - fx) * sx
             sy_val = fy + (y - fy) * sy
             scaled.append((int(round(sx_val)), int(round(sy_val))))

@@ -4,13 +4,13 @@ from ui.sidebar import Sidebar
 from core.rasterization import Rasterization 
 from core.transformations import Transformations
 from core.clipping import cohen_sutherland_clip, sutherland_hodgman_clip
-from core.projections import Projections  # <-- Nova importação para as Projeções
+from core.projections import Projections  
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Trabalho Final Computação Gráfica - Algoritmos")
+        self.setWindowTitle("Computação Gráfica - Trabalho Prático")
         self.resize(1100, 800) 
 
         central_widget = QWidget()
@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         for pt in str_points:
             if pt.strip(): 
                 coords = pt.split(',')
-                if len(coords) == 3:  # Requer as três coordenadas X, Y, Z
+                if len(coords) == 3: 
                     px = float(coords[0].strip())
                     py = float(coords[1].strip())
                     pz = float(coords[2].strip())
@@ -59,7 +59,6 @@ class MainWindow(QMainWindow):
     def handle_draw(self):
         algo = self.sidebar.get_selected_algorithm()
         
-        # Parâmetros gerais dos Spinboxes
         x1, y1 = self.sidebar.spin_x1.value(), self.sidebar.spin_y1.value()
         x2, y2 = self.sidebar.spin_x2.value(), self.sidebar.spin_y2.value()
         x3, y3 = self.sidebar.spin_x3.value(), self.sidebar.spin_y3.value()
@@ -71,7 +70,6 @@ class MainWindow(QMainWindow):
 
         self.canvas.clip_area = None
 
-        # Algoritmos de Desenho Primitivo
         if algo == "bresenham":
             pixels = Rasterization.bresenham_line(x1, y1, x2, y2)
         elif algo == "circle":
@@ -83,7 +81,6 @@ class MainWindow(QMainWindow):
         elif algo == "bezier_cubic":
             pixels = Rasterization.bezier_cubic(x1, y1, x2, y2, x3, y3, x4, y4)
         
-        # Algoritmos de Preenchimento / Polilinha
         elif algo == "polyline":
             if len(points) >= 2:
                 pixels = Rasterization.polyline(points)
@@ -94,32 +91,26 @@ class MainWindow(QMainWindow):
             if len(points) >= 3:
                 pixels = Rasterization.flood_fill_recursive(points, x1, y1)
                 
-        # Transformações Geométricas
         elif algo == "translate":
             if len(points) >= 2:
                 final_points = Transformations.translate(points, x1, y1)
                 pixels = Rasterization.polyline(final_points)
         elif algo == "rotate":
             if len(points) >= 2:
-                # x1 = angulo, x2/y2 = pivô
                 final_points = Transformations.rotate(points, x1, x2, y2)
                 pixels = Rasterization.polyline(final_points)
         elif algo == "scale":
             if len(points) >= 2:
-                # x1/y1 = sx/sy, x2/y2 = ponto fixo
                 final_points = Transformations.scale(points, x1, y1, x2, y2)
                 pixels = Rasterization.polyline(final_points)
         
-        # Recorte de Linha
         elif algo == "clip_line":
             self.canvas.set_clipping_area(x3, y3, x4, y4)
 
-            # Chama o algoritmo: passa reta (x1,y1, x2,y2) e janela (x3,y3, x4,y4)
             clipped_line = cohen_sutherland_clip(x1, y1, x2, y2, x3, y3, x4, y4)
             if clipped_line:
                 pixels = Rasterization.bresenham_line(*clipped_line)
         
-        # Recorte de Polígono
         elif algo == "clip_poly":
             self.canvas.set_clipping_area(x3, y3, x4, y4)
             if len(points) >= 3:
@@ -129,36 +120,31 @@ class MainWindow(QMainWindow):
                         clipped_points.append(clipped_points[0])
                     pixels = Rasterization.polyline(clipped_points)
                     
-        # --- NOVO: Algoritmos de Projeção 3D ---
         elif algo in ["proj_ortho", "proj_oblique", "proj_persp"]:
             points_3d = self.get_parsed_3d_points() # Lê pontos (X, Y, Z)
             projected_2d_points = []
             
             if len(points_3d) >= 2:
                 if algo == "proj_ortho":
-                    plano = x1 # 1 = XY, 2 = XZ, 3 = YZ
+                    plano = x1 
                     projected_2d_points = Projections.orthographic(points_3d, plano)
                     
                 elif algo == "proj_oblique":
                     angle = x1
-                    fator = 1 if x2 == 1 else 0.5 # 1 = Cavalier (L=1), 2 = Cabinet (L=0.5)
+                    fator = 1 if x2 == 1 else 0.5 
                     projected_2d_points = Projections.oblique(points_3d, angle, fator)
                     
                 elif algo == "proj_persp":
-                    d = x1 # Distância focal
+                    d = x1 
                     projected_2d_points = Projections.perspective(points_3d, d)
 
-                # Se a projeção foi gerada com sucesso, processa a rasterização
                 if projected_2d_points and len(projected_2d_points) >= 2:
                     
-                    # Converte eventuais floats projetados para int (para o rasterizador de Bresenham funcionar corretamente)
                     projected_2d_points_int = [(int(round(pt[0])), int(round(pt[1]))) for pt in projected_2d_points]
                     
-                    # Se for um sólido/polígono e o usuário não fechou o contorno, fechamos automaticamente
                     if projected_2d_points_int[0] != projected_2d_points_int[-1]:
                         projected_2d_points_int.append(projected_2d_points_int[0])
                         
-                    # Rasteriza os pontos 2D resultantes usando a função Polyline (que deve iterar as arestas com Bresenham)
                     pixels = Rasterization.polyline(projected_2d_points_int)
 
         self.canvas.set_pixels(pixels)

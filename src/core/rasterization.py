@@ -3,33 +3,26 @@ class Rasterization:
     def bresenham_line(x1, y1, x2, y2):
         pixels = []
         
-        # Diferenças absolutas
         dx = abs(x2 - x1)
         dy = abs(y2 - y1)
         
-        # Determina a direção dos passos (para direita/esquerda ou cima/baixo)
         sx = 1 if x1 < x2 else -1
         sy = 1 if y1 < y2 else -1
         
-        # Variável de controle de erro
         err = dx - dy
 
         while True:
             pixels.append((x1, y1))
             
-            # Se chegou no ponto final, encerra o loop
             if x1 == x2 and y1 == y2:
                 break
                 
-            # Calcula o erro em dobro para evitar uso de ponto flutuante
             e2 = 2 * err
             
-            # Ajusta X
             if e2 > -dy:
                 err -= dy
                 x1 += sx
                 
-            # Ajusta Y
             if e2 < dx:
                 err += dx
                 y1 += sy
@@ -44,7 +37,6 @@ class Rasterization:
         d = 3 - 2 * r
 
         def add_circle_points(xc, yc, x, y):
-            # Plota os 8 octantes
             pixels.extend([
                 (xc + x, yc + y), (xc - x, yc + y),
                 (xc + x, yc - y), (xc - x, yc - y),
@@ -73,7 +65,6 @@ class Rasterization:
         two_rx2 = 2 * rx2
         two_ry2 = 2 * ry2
         
-        # Região 1
         x = 0
         y = ry
         p = ry2 - (rx2 * ry) + (0.25 * rx2)
@@ -97,7 +88,6 @@ class Rasterization:
                 py -= two_rx2
                 p += ry2 + px - py
         
-        # Região 2
         p = ry2 * (x + 0.5)**2 + rx2 * (y - 1)**2 - rx2 * ry2
         while y >= 0:
             add_ellipse_points(xc, yc, x, y)
@@ -120,7 +110,6 @@ class Rasterization:
         for i in range(1, steps + 1):
             t = i / steps
             
-            # Equação paramétrica de Grau 2
             curr_x = int(round((1 - t)**2 * x0 + 2 * (1 - t) * t * x1 + t**2 * x2))
             curr_y = int(round((1 - t)**2 * y0 + 2 * (1 - t) * t * y1 + t**2 * y2))
             
@@ -138,7 +127,6 @@ class Rasterization:
         for i in range(1, steps + 1):
             t = i / steps
             
-            # Equação paramétrica de Grau 3
             curr_x = int(round((1 - t)**3 * x0 + 3 * (1 - t)**2 * t * x1 + 3 * (1 - t) * t**2 * x2 + t**3 * x3))
             curr_y = int(round((1 - t)**3 * y0 + 3 * (1 - t)**2 * t * y1 + 3 * (1 - t) * t**2 * y2 + t**3 * y3))
             
@@ -150,11 +138,9 @@ class Rasterization:
     @staticmethod
     def polyline(points):
         pixels = []
-        # Percorre a lista de pontos, conectando o atual ao próximo
         for i in range(len(points) - 1):
             p1 = points[i]
             p2 = points[i+1]
-            # Utiliza o bresenham_line que já está pronto
             pixels.extend(Rasterization.bresenham_line(p1[0], p1[1], p2[0], p2[1]))
             
         return list(set(pixels))
@@ -166,11 +152,9 @@ class Rasterization:
             
         pixels = set()
         
-        # Garante que o polígono esteja fechado desenhando as bordas
         closed_points = points + [points[0]]
         pixels.update(Rasterization.polyline(closed_points))
         
-        # Algoritmo de Varredura (Scanline)
         min_y = min(p[1] for p in points)
         max_y = max(p[1] for p in points)
         
@@ -180,20 +164,15 @@ class Rasterization:
                 p1 = points[i]
                 p2 = points[(i + 1) % len(points)]
                 
-                # Ignora arestas perfeitamente horizontais
                 if p1[1] == p2[1]:
                     continue
                 
-                # Verifica se a scanline corta a aresta
                 if min(p1[1], p2[1]) <= y < max(p1[1], p2[1]):
-                    # Interpolação de X
                     x = p1[0] + (y - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1])
                     intersections.append(x)
             
-            # Ordena as interseções da esquerda para a direita
             intersections.sort()
             
-            # Pinta os pixels entre os pares de interseções
             for i in range(0, len(intersections), 2):
                 if i + 1 < len(intersections):
                     x_start = int(round(intersections[i]))
@@ -208,26 +187,21 @@ class Rasterization:
         if len(points) < 3:
             return []
             
-        # 1. Desenha as bordas do polígono fechado
         closed_points = points + [points[0]]
         boundary = set(Rasterization.polyline(closed_points))
         
         pixels = set(boundary)
         visited = set()
         
-        # 2. Função interna recursiva (4-conexão)
         def fill(x, y):
-            # Limite da área da janela/viewport
             if x < -11 or x > 11 or y < -11 or y > 11:
                 return
-            # Se for borda, já pintado, ou já visitado, para
             if (x, y) in pixels or (x, y) in visited:
                 return
             
             visited.add((x, y))
             pixels.add((x, y))
             
-            # Chamada recursiva para os vizinhos
             fill(x + 1, y) # Direita
             fill(x - 1, y) # Esquerda
             fill(x, y + 1) # Cima
