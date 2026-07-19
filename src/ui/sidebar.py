@@ -16,16 +16,19 @@ class Sidebar(QWidget):
         self.tab_preenchimento = QWidget()
         self.tab_transformacoes = QWidget()
         self.tab_recorte = QWidget() 
+        self.tab_projecoes = QWidget() # Nova Aba de Projeções
         
         self.tabs.addTab(self.tab_primitivas, "Formas")
         self.tabs.addTab(self.tab_preenchimento, "Pintura")
         self.tabs.addTab(self.tab_transformacoes, "Transf.")
         self.tabs.addTab(self.tab_recorte, "Recorte") 
+        self.tabs.addTab(self.tab_projecoes, "Proj. 3D") # Adicionado ao QTabWidget
         
         self.setup_tab_primitivas()
         self.setup_tab_preenchimento()
         self.setup_tab_transformacoes()
         self.setup_tab_recorte() 
+        self.setup_tab_projecoes() # Chamada do Setup da nova aba
         
         self.layout.addWidget(self.tabs)
 
@@ -76,6 +79,7 @@ class Sidebar(QWidget):
         self.combo_preench.currentIndexChanged.connect(self.update_fields)
         self.combo_transf.currentIndexChanged.connect(self.update_fields)
         self.combo_recorte.currentIndexChanged.connect(self.update_fields) 
+        self.combo_proj.currentIndexChanged.connect(self.update_fields) # Nova conexão
         self.tabs.currentChanged.connect(self.update_fields)
         
         self.update_fields()
@@ -111,8 +115,16 @@ class Sidebar(QWidget):
         layout = QVBoxLayout(self.tab_recorte)
         self.combo_recorte = QComboBox()
         self.combo_recorte.addItem("Recorte de Linha", "clip_line")
-        self.combo_recorte.addItem("Recorte de Polígono", "clip_poly") # Novo Item Adicionado
+        self.combo_recorte.addItem("Recorte de Polígono", "clip_poly")
         layout.addWidget(self.combo_recorte)
+
+    def setup_tab_projecoes(self): # Método para as opções de projeção 3D
+        layout = QVBoxLayout(self.tab_projecoes)
+        self.combo_proj = QComboBox()
+        self.combo_proj.addItem("Ortográfica", "proj_ortho")
+        self.combo_proj.addItem("Oblíqua", "proj_oblique")
+        self.combo_proj.addItem("Perspectiva", "proj_persp")
+        layout.addWidget(self.combo_proj)
 
     # --- Lógica de Interface ---
     def create_spinbox(self):
@@ -126,6 +138,7 @@ class Sidebar(QWidget):
         if tab_idx == 1: return self.combo_preench.currentData()
         if tab_idx == 2: return self.combo_transf.currentData()
         if tab_idx == 3: return self.combo_recorte.currentData() 
+        if tab_idx == 4: return self.combo_proj.currentData() # Retorna o dado da nova aba
 
     def set_row(self, label, field, visible, text=""):
         label.setVisible(visible)
@@ -144,6 +157,9 @@ class Sidebar(QWidget):
         for lbl, fld in campos: self.set_row(lbl, fld, False)
 
         algo = self.get_selected_algorithm()
+
+        # Altera o placeholder apenas como auxílio visual para o usuário
+        self.input_polyline.setPlaceholderText("Ex: -5,5; 0,0; 5,5")
 
         # Configura visibilidade baseada no algoritmo
         if algo == "bresenham":
@@ -206,10 +222,26 @@ class Sidebar(QWidget):
             self.set_row(self.lbl_y3, self.spin_y3, True, "Janela Y Mín:")
             self.set_row(self.lbl_x4, self.spin_x4, True, "Janela X Máx:")
             self.set_row(self.lbl_y4, self.spin_y4, True, "Janela Y Máx:")
-        # Lógica de exibição para a opção Recorte de Polígono
         elif algo == "clip_poly":
             self.set_row(self.lbl_poly, self.input_polyline, True, "Polígono:")
             self.set_row(self.lbl_x3, self.spin_x3, True, "Janela X Mín:")
             self.set_row(self.lbl_y3, self.spin_y3, True, "Janela Y Mín:")
             self.set_row(self.lbl_x4, self.spin_x4, True, "Janela X Máx:")
             self.set_row(self.lbl_y4, self.spin_y4, True, "Janela Y Máx:")
+        
+        # --- Lógica de exibição para as Projeções 3D ---
+        elif algo == "proj_ortho":
+            self.input_polyline.setPlaceholderText("Ex: -5,5,2; 0,0,3; 5,5,1")
+            self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices 3D:")
+            self.set_row(self.lbl_x1, self.spin_x1, True, "Plano (1=XY, 2=XZ, 3=YZ):")
+        
+        elif algo == "proj_oblique":
+            self.input_polyline.setPlaceholderText("Ex: -5,5,2; 0,0,3; 5,5,1")
+            self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices 3D:")
+            self.set_row(self.lbl_x1, self.spin_x1, True, "Ângulo (°):")
+            self.set_row(self.lbl_x2, self.spin_x2, True, "L (1=Cav, 2=Cab):")
+            
+        elif algo == "proj_persp":
+            self.input_polyline.setPlaceholderText("Ex: -5,5,2; 0,0,3; 5,5,1")
+            self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices 3D:")
+            self.set_row(self.lbl_x1, self.spin_x1, True, "Distância d:")

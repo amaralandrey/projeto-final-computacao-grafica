@@ -4,6 +4,7 @@ from ui.sidebar import Sidebar
 from core.rasterization import Rasterization 
 from core.transformations import Transformations
 from core.clipping import cohen_sutherland_clip, sutherland_hodgman_clip
+from core.projections import Projections  # <-- Nova importação para as Projeções
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -38,6 +39,21 @@ class MainWindow(QMainWindow):
                     px = max(-11, min(11, int(coords[0].strip())))
                     py = max(-11, min(11, int(coords[1].strip())))
                     points.append((px, py))
+        return points
+
+    def get_parsed_3d_points(self):
+        """Helper para ler os pontos 3D da caixa de texto"""
+        raw_text = self.sidebar.input_polyline.text()
+        str_points = raw_text.split(';')
+        points = []
+        for pt in str_points:
+            if pt.strip(): 
+                coords = pt.split(',')
+                if len(coords) == 3:  # Requer as três coordenadas X, Y, Z
+                    px = float(coords[0].strip())
+                    py = float(coords[1].strip())
+                    pz = float(coords[2].strip())
+                    points.append((px, py, pz))
         return points
 
     def handle_draw(self):
@@ -103,23 +119,46 @@ class MainWindow(QMainWindow):
             if clipped_line:
                 pixels = Rasterization.bresenham_line(*clipped_line)
         
+        # Recorte de Polígono
         elif algo == "clip_poly":
-            # 1. Desenha a janela de recorte azul baseada nos inputs x3, y3 e x4, y4
             self.canvas.set_clipping_area(x3, y3, x4, y4)
-            
-            # 2. Requer no mínimo 3 pontos informados na UI da Polilinha para ser um polígono
             if len(points) >= 3:
-                # 3. Dispara o Sutherland-Hodgman
                 clipped_points = sutherland_hodgman_clip(points, x3, y3, x4, y4)
-                
-                # 4. Verifica se sobrou algo do polígono após ser cortado
                 if clipped_points and len(clipped_points) >= 3:
-                    # Fecha o polígono no final (repetindo o 1º ponto) para garantir
-                    # que a sua função Rasterization.polyline desenhe a última linha do contorno
                     if clipped_points[0] != clipped_points[-1]:
                         clipped_points.append(clipped_points[0])
-                        
-                    # Manda rasterizar as linhas do novo polígono
                     pixels = Rasterization.polyline(clipped_points)
+                    
+        # --- NOVO: Algoritmos de Projeção 3D ---
+        elif algo in ["proj_ortho", "proj_oblique", "proj_persp"]:
+            points_3d = self.get_parsed_3d_points() # Lê pontos (X, Y, Z)
+            projected_2d_points = []
             
+            if len(points_3d) >= 2:
+                if algo == "proj_ortho":
+                    plano = x1 # 1 = XY, 2 = XZ, 3 = YZ
+                    projected_2d_points = Projections.orthographic(points_3d, plano)
+                    
+                elif algo == "proj_oblique":
+                    angle = x1
+                    fator = 1 if x2 == 1 else 0.5 # 1 = Cavalier (L=1), 2 = Cabinet (L=0.5)
+                    projected_2d_points = Projections.oblique(points_3d, angle, fator)
+                    
+                elif algo == "proj_persp":
+                    d = x1 # Distância focal
+                    projected_2d_points = Projections.perspective(points_3d, d)
+
+                # Se a projeção foi gerada com sucesso, processa a rasterização
+                if projected_2d_points and len(projected_2d_points) >= 2:
+                    
+                    # Converte eventuais floats projetados para int (para o rasterizador de Bresenham funcionar corretamente)
+                    projected_2d_points_int = [(int(round(pt[0])), int(round(pt[1]))) for pt in projected_2d_points]
+                    
+                    # Se for um sólido/polígono e o usuário não fechou o contorno, fechamos automaticamente
+                    if projected_2d_points_int[0] != projected_2d_points_int[-1]:
+                        projected_2d_points_int.append(projected_2d_points_int[0])
+                        
+                    # Rasteriza os pontos 2D resultantes usando a função Polyline (que deve iterar as arestas com Bresenham)
+                    pixels = Rasterization.polyline(projected_2d_points_int)
+
         self.canvas.set_pixels(pixels)
