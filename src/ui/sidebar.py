@@ -7,13 +7,9 @@ class Sidebar(QWidget):
         self.setFixedWidth(300)
         self.layout = QVBoxLayout(self)
 
-        # --- Grupo de Algoritmos ---
         self.group_algo = QGroupBox("Algoritmos e Transformações")
         self.algo_layout = QVBoxLayout()
         
-        # Primitivas
-        self.rb_dda = QRadioButton("Linha DDA")
-        self.rb_dda.setChecked(True)
         self.rb_bresenham = QRadioButton("Linha Bresenham")
         self.rb_circle = QRadioButton("Círculo")
         self.rb_ellipse = QRadioButton("Elipse")
@@ -22,14 +18,11 @@ class Sidebar(QWidget):
         self.rb_polyline = QRadioButton("Polilinha (N pontos)")
         self.rb_scanline = QRadioButton("Varredura (Scanline)")
         self.rb_floodfill = QRadioButton("Recursivo (Flood Fill)")
-        
-        # Transformações
+    
         self.rb_translate = QRadioButton("Translação")
         self.rb_rotate = QRadioButton("Rotação")
         self.rb_scale = QRadioButton("Escala")
         
-        # Adicionando todos ao layout
-        self.algo_layout.addWidget(self.rb_dda)
         self.algo_layout.addWidget(self.rb_bresenham)
         self.algo_layout.addWidget(self.rb_circle)
         self.algo_layout.addWidget(self.rb_ellipse)
@@ -45,7 +38,6 @@ class Sidebar(QWidget):
         self.group_algo.setLayout(self.algo_layout)
         self.layout.addWidget(self.group_algo)
 
-        # --- Grupo de Coordenadas ---
         self.group_coords = QGroupBox("Parâmetros (Entrada)")
         self.coords_layout = QFormLayout()
         
@@ -64,7 +56,6 @@ class Sidebar(QWidget):
         self.input_polyline = QLineEdit()
         self.input_polyline.setPlaceholderText("Ex: -5,-5; 5,-5; 0,5")
         
-        # Labels para orientar o usuário (Reutilização de campos)
         self.coords_layout.addRow(QLabel("P0 X (X1/Ângulo/TransX/Sx):"), self.spin_x1)
         self.coords_layout.addRow(QLabel("P0 Y (Y1/TransY/Sy):"), self.spin_y1)
         self.coords_layout.addRow(QLabel("P1 X (X2/PivôX/FixoX):"), self.spin_x2)
@@ -79,7 +70,6 @@ class Sidebar(QWidget):
         self.group_coords.setLayout(self.coords_layout)
         self.layout.addWidget(self.group_coords)
 
-        # --- Botões de Ação ---
         self.btn_draw = QPushButton("Desenhar")
         self.btn_clear = QPushButton("Limpar")
         self.layout.addWidget(self.btn_draw)
@@ -88,12 +78,11 @@ class Sidebar(QWidget):
 
     def create_spinbox(self):
         spinbox = QSpinBox()
-        spinbox.setRange(-1000, 1000) # Aumentado range para aceitar translações maiores
+        spinbox.setRange(-1000, 1000)
         return spinbox
 
     def get_selected_algorithm(self):
-        if self.rb_dda.isChecked(): return "dda"
-        elif self.rb_bresenham.isChecked(): return "bresenham"
+        if self.rb_bresenham.isChecked(): return "bresenham"
         elif self.rb_circle.isChecked(): return "circle"
         elif self.rb_ellipse.isChecked(): return "ellipse"
         elif self.rb_bezier2.isChecked(): return "bezier_quad"
