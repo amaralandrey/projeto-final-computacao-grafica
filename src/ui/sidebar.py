@@ -15,14 +15,17 @@ class Sidebar(QWidget):
         self.tab_primitivas = QWidget()
         self.tab_preenchimento = QWidget()
         self.tab_transformacoes = QWidget()
+        self.tab_recorte = QWidget() 
         
         self.tabs.addTab(self.tab_primitivas, "Formas")
         self.tabs.addTab(self.tab_preenchimento, "Pintura")
         self.tabs.addTab(self.tab_transformacoes, "Transf.")
+        self.tabs.addTab(self.tab_recorte, "Recorte") 
         
         self.setup_tab_primitivas()
         self.setup_tab_preenchimento()
         self.setup_tab_transformacoes()
+        self.setup_tab_recorte() 
         
         self.layout.addWidget(self.tabs)
 
@@ -72,6 +75,7 @@ class Sidebar(QWidget):
         self.combo_prim.currentIndexChanged.connect(self.update_fields)
         self.combo_preench.currentIndexChanged.connect(self.update_fields)
         self.combo_transf.currentIndexChanged.connect(self.update_fields)
+        self.combo_recorte.currentIndexChanged.connect(self.update_fields) 
         self.tabs.currentChanged.connect(self.update_fields)
         
         self.update_fields()
@@ -103,6 +107,13 @@ class Sidebar(QWidget):
         self.combo_transf.addItem("Escala", "scale")
         layout.addWidget(self.combo_transf)
 
+    def setup_tab_recorte(self):
+        layout = QVBoxLayout(self.tab_recorte)
+        self.combo_recorte = QComboBox()
+        self.combo_recorte.addItem("Recorte de Linha", "clip_line")
+        self.combo_recorte.addItem("Recorte de Polígono", "clip_poly") # Novo Item Adicionado
+        layout.addWidget(self.combo_recorte)
+
     # --- Lógica de Interface ---
     def create_spinbox(self):
         spin = QSpinBox()
@@ -113,7 +124,8 @@ class Sidebar(QWidget):
         tab_idx = self.tabs.currentIndex()
         if tab_idx == 0: return self.combo_prim.currentData()
         if tab_idx == 1: return self.combo_preench.currentData()
-        return self.combo_transf.currentData()
+        if tab_idx == 2: return self.combo_transf.currentData()
+        if tab_idx == 3: return self.combo_recorte.currentData() 
 
     def set_row(self, label, field, visible, text=""):
         label.setVisible(visible)
@@ -185,3 +197,19 @@ class Sidebar(QWidget):
             self.set_row(self.lbl_y1, self.spin_y1, True, "Escala Y:")
             self.set_row(self.lbl_x2, self.spin_x2, True, "Ponto Fixo X:")
             self.set_row(self.lbl_y2, self.spin_y2, True, "Ponto Fixo Y:")
+        elif algo == "clip_line":
+            self.set_row(self.lbl_x1, self.spin_x1, True, "Reta X Inicial:")
+            self.set_row(self.lbl_y1, self.spin_y1, True, "Reta Y Inicial:")
+            self.set_row(self.lbl_x2, self.spin_x2, True, "Reta X Final:")
+            self.set_row(self.lbl_y2, self.spin_y2, True, "Reta Y Final:")
+            self.set_row(self.lbl_x3, self.spin_x3, True, "Janela X Mín:")
+            self.set_row(self.lbl_y3, self.spin_y3, True, "Janela Y Mín:")
+            self.set_row(self.lbl_x4, self.spin_x4, True, "Janela X Máx:")
+            self.set_row(self.lbl_y4, self.spin_y4, True, "Janela Y Máx:")
+        # Lógica de exibição para a opção Recorte de Polígono
+        elif algo == "clip_poly":
+            self.set_row(self.lbl_poly, self.input_polyline, True, "Polígono:")
+            self.set_row(self.lbl_x3, self.spin_x3, True, "Janela X Mín:")
+            self.set_row(self.lbl_y3, self.spin_y3, True, "Janela Y Mín:")
+            self.set_row(self.lbl_x4, self.spin_x4, True, "Janela X Máx:")
+            self.set_row(self.lbl_y4, self.spin_y4, True, "Janela Y Máx:")

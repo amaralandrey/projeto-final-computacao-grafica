@@ -115,7 +115,6 @@ class Rasterization:
     @staticmethod
     def bezier_quad(x0, y0, x1, y1, x2, y2, steps=20):
         pixels = []
-        # Começa no ponto inicial
         last_x, last_y = x0, y0
         
         for i in range(1, steps + 1):
@@ -125,12 +124,11 @@ class Rasterization:
             curr_x = int(round((1 - t)**2 * x0 + 2 * (1 - t) * t * x1 + t**2 * x2))
             curr_y = int(round((1 - t)**2 * y0 + 2 * (1 - t) * t * y1 + t**2 * y2))
             
-            # Rasteriza o trecho usando o Bresenham existente
             pixels.extend(Rasterization.bresenham_line(last_x, last_y, curr_x, curr_y))
             
             last_x, last_y = curr_x, curr_y
             
-        return list(set(pixels)) # Remove pontos duplicados nas junções
+        return list(set(pixels)) 
 
     @staticmethod
     def bezier_cubic(x0, y0, x1, y1, x2, y2, x3, y3, steps=20):

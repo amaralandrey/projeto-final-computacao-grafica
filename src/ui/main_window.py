@@ -3,6 +3,7 @@ from ui.canvas import Canvas
 from ui.sidebar import Sidebar
 from core.rasterization import Rasterization 
 from core.transformations import Transformations
+from core.clipping import cohen_sutherland_clip, sutherland_hodgman_clip
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -52,6 +53,8 @@ class MainWindow(QMainWindow):
         pixels = []
         points = self.get_parsed_points()
 
+        self.canvas.clip_area = None
+
         # Algoritmos de Desenho Primitivo
         if algo == "bresenham":
             pixels = Rasterization.bresenham_line(x1, y1, x2, y2)
@@ -90,5 +93,33 @@ class MainWindow(QMainWindow):
                 # x1/y1 = sx/sy, x2/y2 = ponto fixo
                 final_points = Transformations.scale(points, x1, y1, x2, y2)
                 pixels = Rasterization.polyline(final_points)
+        
+        # Recorte de Linha
+        elif algo == "clip_line":
+            self.canvas.set_clipping_area(x3, y3, x4, y4)
+
+            # Chama o algoritmo: passa reta (x1,y1, x2,y2) e janela (x3,y3, x4,y4)
+            clipped_line = cohen_sutherland_clip(x1, y1, x2, y2, x3, y3, x4, y4)
+            if clipped_line:
+                pixels = Rasterization.bresenham_line(*clipped_line)
+        
+        elif algo == "clip_poly":
+            # 1. Desenha a janela de recorte azul baseada nos inputs x3, y3 e x4, y4
+            self.canvas.set_clipping_area(x3, y3, x4, y4)
+            
+            # 2. Requer no mínimo 3 pontos informados na UI da Polilinha para ser um polígono
+            if len(points) >= 3:
+                # 3. Dispara o Sutherland-Hodgman
+                clipped_points = sutherland_hodgman_clip(points, x3, y3, x4, y4)
+                
+                # 4. Verifica se sobrou algo do polígono após ser cortado
+                if clipped_points and len(clipped_points) >= 3:
+                    # Fecha o polígono no final (repetindo o 1º ponto) para garantir
+                    # que a sua função Rasterization.polyline desenhe a última linha do contorno
+                    if clipped_points[0] != clipped_points[-1]:
+                        clipped_points.append(clipped_points[0])
+                        
+                    # Manda rasterizar as linhas do novo polígono
+                    pixels = Rasterization.polyline(clipped_points)
             
         self.canvas.set_pixels(pixels)
