@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QGroupBox, QComboBox, 
-                             QPushButton, QSpinBox, QLabel, QFormLayout, 
-                             QLineEdit, QTabWidget)
+                             QPushButton, QSpinBox, QDoubleSpinBox, QLabel, 
+                             QFormLayout, QLineEdit, QTabWidget)
 from PyQt6.QtCore import Qt
 
 class Sidebar(QWidget):
@@ -39,6 +39,20 @@ class Sidebar(QWidget):
         self.spin_x3, self.spin_y3 = self.create_spinbox(), self.create_spinbox()
         self.spin_x4, self.spin_y4 = self.create_spinbox(), self.create_spinbox()
         self.spin_r = self.create_spinbox()
+        
+        self.spin_angle = QSpinBox()
+        self.spin_angle.setRange(-360, 360)
+        
+        self.spin_scale_x = QDoubleSpinBox()
+        self.spin_scale_x.setRange(-10.0, 10.0)
+        self.spin_scale_x.setSingleStep(0.1)
+        self.spin_scale_x.setValue(1.0)
+        
+        self.spin_scale_y = QDoubleSpinBox()
+        self.spin_scale_y.setRange(-10.0, 10.0)
+        self.spin_scale_y.setSingleStep(0.1)
+        self.spin_scale_y.setValue(1.0)
+        
         self.input_polyline = QLineEdit()
         self.input_polyline.setPlaceholderText("Ex: -5,5; 0,0; 5,5")
         
@@ -47,6 +61,10 @@ class Sidebar(QWidget):
         self.lbl_x3, self.lbl_y3 = QLabel("X3:"), QLabel("Y3:")
         self.lbl_x4, self.lbl_y4 = QLabel("X4:"), QLabel("Y4:")
         self.lbl_r, self.lbl_poly = QLabel("Raio:"), QLabel("Dados:")
+        
+        self.lbl_angle = QLabel("Ângulo:")
+        self.lbl_scale_x = QLabel("Escala X:")
+        self.lbl_scale_y = QLabel("Escala Y:")
         
         self.coords_layout.addRow(self.lbl_x1, self.spin_x1)
         self.coords_layout.addRow(self.lbl_y1, self.spin_y1)
@@ -57,6 +75,11 @@ class Sidebar(QWidget):
         self.coords_layout.addRow(self.lbl_x4, self.spin_x4)
         self.coords_layout.addRow(self.lbl_y4, self.spin_y4)
         self.coords_layout.addRow(self.lbl_r, self.spin_r)
+        
+        self.coords_layout.addRow(self.lbl_angle, self.spin_angle)
+        self.coords_layout.addRow(self.lbl_scale_x, self.spin_scale_x)
+        self.coords_layout.addRow(self.lbl_scale_y, self.spin_scale_y)
+        
         self.coords_layout.addRow(self.lbl_poly, self.input_polyline)
         
         self.group_coords.setLayout(self.coords_layout)
@@ -142,7 +165,10 @@ class Sidebar(QWidget):
             (self.lbl_x2, self.spin_x2), (self.lbl_y2, self.spin_y2),
             (self.lbl_x3, self.spin_x3), (self.lbl_y3, self.spin_y3),
             (self.lbl_x4, self.spin_x4), (self.lbl_y4, self.spin_y4),
-            (self.lbl_r, self.spin_r), (self.lbl_poly, self.input_polyline)
+            (self.lbl_r, self.spin_r), (self.lbl_poly, self.input_polyline),
+            (self.lbl_angle, self.spin_angle), 
+            (self.lbl_scale_x, self.spin_scale_x), 
+            (self.lbl_scale_y, self.spin_scale_y)
         ]
         for lbl, fld in campos: self.set_row(lbl, fld, False)
 
@@ -192,13 +218,13 @@ class Sidebar(QWidget):
             self.set_row(self.lbl_y1, self.spin_y1, True, "Desl Y:")
         elif algo == "rotate":
             self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices:")
-            self.set_row(self.lbl_x1, self.spin_x1, True, "Ângulo:")
+            self.set_row(self.lbl_angle, self.spin_angle, True, "Ângulo:")
             self.set_row(self.lbl_x2, self.spin_x2, True, "Pivô X:")
             self.set_row(self.lbl_y2, self.spin_y2, True, "Pivô Y:")
         elif algo == "scale":
             self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices:")
-            self.set_row(self.lbl_x1, self.spin_x1, True, "Escala X:")
-            self.set_row(self.lbl_y1, self.spin_y1, True, "Escala Y:")
+            self.set_row(self.lbl_scale_x, self.spin_scale_x, True, "Escala X:")
+            self.set_row(self.lbl_scale_y, self.spin_scale_y, True, "Escala Y:")
             self.set_row(self.lbl_x2, self.spin_x2, True, "Ponto Fixo X:")
             self.set_row(self.lbl_y2, self.spin_y2, True, "Ponto Fixo Y:")
         elif algo == "clip_line":
@@ -216,18 +242,15 @@ class Sidebar(QWidget):
             self.set_row(self.lbl_y3, self.spin_y3, True, "Janela Y Mín:")
             self.set_row(self.lbl_x4, self.spin_x4, True, "Janela X Máx:")
             self.set_row(self.lbl_y4, self.spin_y4, True, "Janela Y Máx:")
-        
         elif algo == "proj_ortho":
             self.input_polyline.setPlaceholderText("Ex: -5,5,2; 0,0,3; 5,5,1")
             self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices 3D:")
             self.set_row(self.lbl_x1, self.spin_x1, True, "Plano (1=XY, 2=XZ, 3=YZ):")
-        
         elif algo == "proj_oblique":
             self.input_polyline.setPlaceholderText("Ex: -5,5,2; 0,0,3; 5,5,1")
             self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices 3D:")
-            self.set_row(self.lbl_x1, self.spin_x1, True, "Ângulo (°):")
+            self.set_row(self.lbl_angle, self.spin_angle, True, "Ângulo (°):")
             self.set_row(self.lbl_x2, self.spin_x2, True, "L (1=Cav, 2=Cab):")
-            
         elif algo == "proj_persp":
             self.input_polyline.setPlaceholderText("Ex: -5,5,2; 0,0,3; 5,5,1")
             self.set_row(self.lbl_poly, self.input_polyline, True, "Vértices 3D:")

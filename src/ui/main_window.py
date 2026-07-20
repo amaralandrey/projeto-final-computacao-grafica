@@ -97,11 +97,14 @@ class MainWindow(QMainWindow):
                 pixels = Rasterization.polyline(final_points)
         elif algo == "rotate":
             if len(points) >= 2:
-                final_points = Transformations.rotate(points, x1, x2, y2)
+                angle = self.sidebar.spin_angle.value()
+                final_points = Transformations.rotate(points, angle, x2, y2)
                 pixels = Rasterization.polyline(final_points)
         elif algo == "scale":
             if len(points) >= 2:
-                final_points = Transformations.scale(points, x1, y1, x2, y2)
+                scale_x = self.sidebar.spin_scale_x.value()
+                scale_y = self.sidebar.spin_scale_y.value()
+                final_points = Transformations.scale(points, scale_x, scale_y, x2, y2)
                 pixels = Rasterization.polyline(final_points)
         
         elif algo == "clip_line":
@@ -121,7 +124,7 @@ class MainWindow(QMainWindow):
                     pixels = Rasterization.polyline(clipped_points)
                     
         elif algo in ["proj_ortho", "proj_oblique", "proj_persp"]:
-            points_3d = self.get_parsed_3d_points() # Lê pontos (X, Y, Z)
+            points_3d = self.get_parsed_3d_points()
             projected_2d_points = []
             
             if len(points_3d) >= 2:
@@ -130,7 +133,7 @@ class MainWindow(QMainWindow):
                     projected_2d_points = Projections.orthographic(points_3d, plano)
                     
                 elif algo == "proj_oblique":
-                    angle = x1
+                    angle = self.sidebar.spin_angle.value()
                     fator = 1 if x2 == 1 else 0.5 
                     projected_2d_points = Projections.oblique(points_3d, angle, fator)
                     
