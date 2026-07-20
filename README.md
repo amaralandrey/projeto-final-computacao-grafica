@@ -54,5 +54,5 @@ pip install -r requirements.txt
 5. Execute a aplicação:
 
 ```bash
-python src/main.py
+python3 src/main.py
 ```
